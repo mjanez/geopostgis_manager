@@ -1,0 +1,64 @@
+
+# Geoserver Parameters [Mandatory]
+geoserver_servers:
+  # Geoserver #1
+  - name: SVJC-DES-DGPCE Server Test
+    dbname_store: dev_mnrdb
+    url: http://svjc-des-dgpce:8090/geoserver
+    active: True
+    workspace: test
+    username: admin
+    password: ttVKKT3uL45IJhB2Q6iN
+
+  # Geoserver #2
+  - name: SVJC-DES-DGPCE Server
+    dbname_store: dev_mnrdb
+    url: http://svjc-des-dgpce:8090/geoserver
+    active: False
+    workspace: mnr
+    username: admin
+    password: ttVKKT3uL45IJhB2Q6iN
+    output_schema: public
+
+# DB connection parameters [Mandatory]
+db_servers:
+  # mnrdb
+  - name: MNR PostGIS
+    type: postgres
+    host: svjc-des-dgpce
+    port: '5432'
+    dbname: dev_mnrdb
+    username: mnrz
+    password: wenGYIHdkwB6R9XIX184
+    
+# Dataset documentation details [Mandatory]
+datasets_doc:
+  in_db: True
+  db_table: 'public.datasets'
+  path: 'D:\Local\Repositorio\Github\local\geopostgis_manager\data\datasets_doc.csv'
+  date: 2002-12-12
+  # Schema in which the tables with the spatial data will be stored. Default: public
+  output_schema: public
+  # Field names [Mandatory]
+  field_name: titulo
+  field_publisher: distribuidor
+  field_identifier: nombre_capa
+  field_path: ruta_p
+  # Field names [Optional]
+  field_sld: sld
+  field_metadata_url: url_metadatos
+  field_description: resumen
+  field_ogc_workspace: workspace_ogc
+  field_creator: propietario
+  # Loader publisher
+  publisher: Tragsatec
+
+# Config  [Mandatory]
+default:
+  # Software version
+  version: 1.0
+  # Execute software with multicore parallel processing
+  parallelization: True
+  # Loading modes
+  load_to_db: True
+  load_to_geoserver: True
