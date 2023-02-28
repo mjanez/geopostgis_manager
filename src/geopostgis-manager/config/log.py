@@ -1,3 +1,9 @@
+#!/usr/bin/env python3
+## Coding: UTF-8
+## Author: mjanez@tragsa.es
+## Institution: -
+## Project: -
+# inbuilt libraries
 import logging
 import os
 
@@ -6,10 +12,12 @@ def log_file(log_folder):
     '''
     Starts the logger --log_folder parameter entered
     
-    Parameters:
+    Parameters
+    ----------
     - log_folder: Folder where log is stored 
 
-    Return:
+    Return
+    ----------
     Logger object
     '''
     logger = logging.getLogger()

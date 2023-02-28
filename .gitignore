@@ -6,3 +6,5 @@ env/
 venv/
 /log
 **/__pycache__
+/data/*zip
+/docs/*

@@ -1,53 +1,41 @@
 #!/usr/bin/env python3
-## File: db_management.py
 ## Coding: UTF-8
-## Author: Manuel Ángel Jáñez García (mjanez@tragsa.es)
+## Author: mjanez@tragsa.es
 ## Institution: -
 ## Project: -
-## Goal: The purpose of this script is to manage connections and operations with the database.
-""" Changelog:
-    v1.0 - 12 Dec 2022: Create the first version
-"""
-# Update the version when apply changes 
-version = "1.0"
-
-##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~##
-##           db_management.py           ##
-##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~##
-
-# Database management functions.
-
-## Import libraries
+# inbuilt libraries
 import urllib.request
 import json
 import sys
 from pprint import pprint
-import psycopg2
-from datetime import datetime
 import logging
 import os
+
+# third-party libraries
+import psycopg2
+from datetime import datetime
 from sqlalchemy.ext.declarative import declarative_base 
 from sqlalchemy import MetaData
 import sqlalchemy
 
-log_module = "[" + __name__ + "]"
+log_module = f"[{__name__}]"
 
-def get_connection(db_params, endpoint_name=None, db_type=None):
-  if endpoint_name is not None:
-    logging.info(log_module + ":" + "Connect to: " + endpoint_name + " | DB type: " + db_type)
+def get_connection(db_params, db_type=None):
+  if db_params.endpoint is not None:
+    logging.info(f"{log_module}:Connect to: {db_params.endpoint} | DB type: {db_type}")
   conn = psycopg2.connect(host=db_params.host, port=db_params.port, user=db_params.username, password=db_params.password, dbname=db_params.dbname)
   return(conn)
 
 def create_engine(db_params):
-    db_engine = sqlalchemy.create_engine('postgresql://' + db_params.username + ':' + db_params.password + '@'+ db_params.host + ':' + db_params.port + '/' + db_params.dbname)
-    return db_engine
+    engine = sqlalchemy.create_engine('postgresql://' + db_params.username + ':' + db_params.password + '@'+ db_params.host + ':' + db_params.port + '/' + db_params.dbname)
+    return engine
 
 def get_query(conn, query):
     rv = True
     cur = conn.cursor()
     conn.set_client_encoding('UTF8') 
     print(str(query))
-    logging.info("SQL query:\n" + str(query))
+    logging.info(f"{log_module}:SQL query:\n" + str(query))
     cur.execute(query)
     conn.commit()
     return(rv)

@@ -1,27 +1,29 @@
 <h1 align="center">geopostgis-manager</h1>
 <p align="center">
-<a href="https://github.com/mjanez/geopostgis_manager-ckan"><img src="https://img.shields.io/badge/EIKOS%20CKAN-version%202.9.5-brightgreen" alt="CKAN Versions"></a><a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+<a href="https://github.com/mjanez/geopostgis_manager-ckan"><img src="https://camo.githubusercontent.com/e7482049f34711b5200ecc70004690f13f2a0fae49a9f48e96dc2cf7dbac483b/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f446f636b6572253230434b414e2d322e392e352d627269676874677265656e" alt="CKAN Versions"></a><a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
 
 
 <p align="center">
-    <a href="#overview">Overview</a> •
     <a href="#configuration">Configuration</a> •
+    <a href="#getting-started">Getting started</a> •
     <a href="#extensions">Extensions</a> •
-•
     <a href="#license">License</a>
 </p>
 
-This file explains how to create the Geoserver type server for publishing map services, and their metadata, according to OGC standards by using the [`geoserver-rest`](https://geoserver-rest.readthedocs.io/en/latest/about.html) library for spatial data management in Geoserver and [`sqlalchemy`](https://www.sqlalchemy.org/)/[`geoalchemy2`](https://geoalchemy-2.readthedocs.io/en/latest/) libraries to load into PostGIS database.
+This file explains how to create Geoserver layers ([FeatureTypes](https://docs.geoserver.org/2.22.x/en/user/rest/api/featuretypes.html) & [Coverages](https://docs.geoserver.org/2.22.x/en/user/rest/api/coverages.html)) for publishing map services and their metadata according to OGC standards using a library for spatial data management in Geoserver and [`sqlalchemy`](https://www.sqlalchemy.org/)/[`geoalchemy2`](https://geoalchemy-2.readthedocs.io/en/latest/) libraries for loading into PostGIS database.
 
 **Requirements**:
 * Linux/Windows 64 bit system
 * Map server [Geoserver](https://docs.geoserver.org/) available.
-* [PostgreSQL-PostGIS](https://postgis.net/) database available.
+* [PostgreSQL-PostGIS](https://postgis.net/) database available. [**Optional**]
 * The code compiles with [Python 3](https://www.python.org/downloads/). The required libraries can be found in `requirements.txt`.
+
+>**Note**:<br>
+> Tested successfully with [Python 3.7.9](https://www.python.org/downloads/release/python-379/)
 
 
 ## Configuration
-The necessary steps to configure the environment and install the libraries are as follows. First create the `venv` directory where it will run (or replace `whoami` with the desired user name if you create for example one for `ckan`):
+The necessary steps to configure the environment and install the libraries are as follows. First create the virtual environment ([`venv`](https://docs.python.org/3/library/venv.html)) where it will run (or replace `whoami` with the desired user name if you create for example one for `ckan`):
 
 ```bash
 # Linux
@@ -30,152 +32,155 @@ git clone https://github.com/mjanez/geopostgis_manager.git
 cd /geopostgis_manager
 sudo chown `whoami` /geopostgis_manager
 python3 -m venv .env    # sudo apt-get install python3-venv
-. /.env/bin/activate
-python3 -m pip install  install -r requirements.txt
+. .env/bin/activate
+python3 -m pip install -r requirements.txt
 
-# Windows
+# Windows (CMD)
 cd /my/path
 git clone https://github.com/mjanez/geopostgis_manager.git 
 cd /geopostgis_manager/
 python -m venv .env
-.env\Scripts\activate.bat  # CMD || env\Scripts\Activate.ps1  # Powershell
+.env/Scripts/activate.bat  # CMD || .env\Scripts\Activate.ps1  # Powershell
 pip install  install -r requirements.txt
 ```
 
-## Requirements
-You can use the following code to generate a `requirements.txt`
-
-```python
-# Into virtualenv
-(.env) cd path/to/project
-(.env) pip3 freeze > requirements.txt
-```
-
-
+>**Note**:<br>
+> You can use the following code to generate a `requirements.txt`
+> 
+>```python
+># Into virtualenv
+>(.env) cd /path/to/project
+>(.env) pip3 freeze > requirements.txt
+>```
 
 
+## Getting started
+>**Warning**:<br>
+> Before running the harvester, located in `/src/geopostgis-manager/run.py`, the parameters of the configuration file [`/config.yml`](/config.yml) must be updated as described in the following section.
 
-
-
-===
-
-
-## Launch
-Before running the harvester, located in `ckan.ogc_ckan.run.py`, the parameters of the configuration file `config.yml` must be updated as described in [ckan-harvester repository](https://github.com/mjanez/geopostgis_manager/tree/main/ckan-harvester#configuraci%C3%B3n-1)
-
-### `harvest_servers`
-Información básica de los servidores que se van a cosechar, pueden ser de dos tipos: `ogc` o `csw`. Se añaden como elementos nuevos a partir de la `url` en el propio fichero de configuración, ejemplo:
+**Sample `config.yml`**:
 ```yaml
-harvest_servers:
-  - url: 'https://geoservicios.iepnb.es/geoserver/ows'
-    name: 'Geoserver IEPNB'
-    groups: ['geoserver-eikos']
-    active: True
-    type: 'ogc'
-    organization: 'iepnb'
-    workspaces: ['ENP','inenp','RN2000'] 
-    default_keywords: ['iepnb', 'environment', 'biota']
-    inspireid_theme: 'PS'
-    inspireid_nutscode: 'ES' 
-    inspireid_versionid: ''
-    default_provenance: 'Los datos espaciales se han generado a partir del Banco de Datos de la Naturaleza bajo la responsabilidad del Inventario Español del Patrimonio Natural y de la Biodiversidad, en el marco del proyecto EIKOS.'
-  - url: 'https://www.idee.es/csw-codsi-idee/srv/spa/csw'
-    name: 'CODSI'
-    active: True
-    type: 'csw'
-    organization: 'codsi'
-    default_keywords: ['iepnb', 'environment', 'biota']
-    inspireid_theme: 'HB'
-    constraints: 
-      keywords: ['iepnb', 'inventario', 'patrimonio', 'miteco', 'natura']
-      mails: ['brfranco@miteco.es', 'buzon-bdatos@miteco.es']
-    default_bbox: '{"type": "Polygon", "coordinates": [[[-19.0, 27.0], [4.57, 27.0], [4.57, 44.04], [-19.0, 44.04], [-19.0, 27.0]]]}'
+geopostgis_bundles:
+  # Bundle ID [Mandatory]
+  - bundle_id: 'test_bundle'
+    # DB connection parameters [Mandatory]
+    db_endpoint: PostGIS Test
+    db_type: postgres
+    db_host: localhost
+    db_port: '5432'
+    db_dbname: testdb
+    db_username: user
+    db_password: password
+    db_active: True
+    
+    # Geoserver Parameters [Mandatory]
+    geo_endpoint: Localhost Server Test
+    geo_datastore: testdb
+    geo_url: http://127.0.0.1:8080/geoserver/
+    # geo_workspace Overrides ogc_workspace in dataset table. If not put: Null
+    geo_workspace: test
+    geo_username: admin
+    geo_password: password
+    geo_srid: 3857
+    geo_active: True
+
+# Dataset documentation details by bundle [Mandatory]
+datasets_doc:
+  # Bundle ID [Mandatory]
+  - bundle_id: 'test_bundle'
+    db_datasets_mode: False
+    db_datasets_doc_table: 'public.datasets'
+    datasets_doc_path: '/srv/data/datasets_doc.csv'
+    date: 2002-12-12
+    # Schema in which the tables with the spatial data will be stored. Default: public
+    output_schema: public
+    # Field names [Mandatory]
+    field_name: titulo
+    field_publisher: distribuidor
+    field_identifier: nombre_capa
+    field_path: ruta_p
+    field_srid: srid
+    field_carto_type: carto_type
+    # Field names [Optional]
+    field_sld: sld
+    field_metadata_url: url_metadatos
+    field_description: resumen
+    field_ogc_workspace: workspace_ogc
+    field_creator: propietario
+    # Loader publisher
+    publisher: Tragsatec
+
+# Config  [Mandatory]
+default:
+  # Execute software with multicore parallel processing
+  parallelization: True
+  # If needed, proxy socks5/http (http-https)
+  proxy_socks5: 'socks5://user:pass@host:port'
+  proxy_http: 'http://user:pass@host:port'
+  # Loading modes
+  load_to_db: False
+  load_to_geoserver: True
 ```
 
-**Servidores OGC**
-* Obligatorios:
-    * `url`: URL pública del endpoint OGC. (ej. `https://geoservicios.iepnb.es/geoserver/ows`)
-    * `name`: Nombre informativo del servidor. (ej. `Geoserver IEPNB`)
-    * `active`: Sí se permite la cosecha del servidor en el programa. Valor: `True` ó `False`
-    * `type`: Tipo de servidor. Valor: `ogc`
-    * `organization`: El nombre de la organización que será propietaria de los conjuntos de datos cosechados. **Debería haber sido creada previamente.** Puede ver las organizaciones en su sitio CKAN en http://localhost:5000/api/action/organization_list. (ej. `iepnb`)
-    * `inspireid_theme`: Siglas del [tema INSPIRE](https://inspire.ec.europa.eu/theme) por defecto, sí no viene indicado en los metadatos recolectados del servidor OGC. (ej. `PS`)
-    * `default_provenance`: Una declaración de procedencia por defecto (ej. `Los datos espaciales se han generado a partir del Banco de Datos de la Naturaleza bajo la responsabilidad del Inventario Español del Patrimonio Natural y de la Biodiversidad, en el marco del proyecto EIKOS.`).
+### `geopostgis_bundles`
+Basic information about the map server (Geoserver) on which the new layers are to be created, and the DB that will be used to store them, in the case of vector data (`FeatureTypes`). For raster data (`Coverages`), these can be created as layers in Geoserver, but are stored locally in directories on the server.
 
-* Opcionales: 
-    * `groups`: Grupos a los que pertenece el dataset dentro de `{ckan_site_url}/group/ `
-    * `workspaces`: Listado de espacios de trabajo usados como filtro en el servidor a cosechar, sólo se ingieren los datasets que empiezan por los valores almacenados. (ej. `['ENP','inenp','RN2000']`)
-    * `default_keywords`: Las palabras claves por defecto para identificar los datasets cosechados en el servidor. (ej. `['iepnb', 'environment', 'biota']`)
-    * `inspireid_nutscode`: Código de país de la [Unión Europea](https://ec.europa.eu/eurostat/statistics-explained/index.php?title=Glossary:Country_codes), por defecto se usa: `ES`
-    * `inspireid_versionid`: Código opcional (**puede quedarse vacío**) de la versión que debe asignarse al inspireId generado. (ej. `''` o cualquiera como: `2022`)
+**Mandatory**
 
-    >**Note**<br>
-    > Pueden dejarse vacíos o rellenarse con valores a discreción.
+`bundle_id`, *str*: Bundle identifier, one per geoserver-postgis info (ej. `test_bundle`).
 
-**Servidores CSW**
+* Database:
+    * `db_endpoint`, *str*: Descriptive name of the server. (ej. `PostGIS Test`)
+    * `db_type`, *str*: Type of the database. Currently supported: `postgres`.
+    * `db_host`, *str*: URL of the Database (ej. `localhost`)
+    * `db_port`, *str*: Port of the Database (ej. `5432`)
+    * `db_dbname`, *str*
+    * `db_username`, *str*
+    * `db_password`, *str*
+    * `geo_active`, *bool*: Whether the endpoint is active for data upload to the endpoint. Value: `True` or `False`.
 
-### Servidores CSW
-* Obligatorios:
-    * `url`: URL pública del endpoint CSW. (ej. `[https://geoservicios.iepnb.es/geoserver/ows](https://www.mapama.gob.es/ide/metadatos/srv/spa/csw)`)
-    * `name`: Nombre informativo del servidor. (ej. `Catalogo MITECO`)
-    * `active`: Sí se permite la cosecha del servidor en el programa. Valor: `True` ó `False`
-    * `type`: Tipo de servidor. Valor: `csw`
-    * `organization`: El nombre de la organización que será propietaria de los conjuntos de datos cosechados. **Debería haber sido creada previamente.** Puede ver las organizaciones en su sitio CKAN en http://localhost:5000/api/action/organization_list. (ej. `iepnb`)
-    * `inspireid_theme`: Siglas del [tema INSPIRE](https://inspire.ec.europa.eu/theme) por defecto, sí no viene indicado en los metadatos recolectados del servidor OGC. (ej. `PS`)
+* Geoserver:
+    * `geo_endpoint`, *str*: Descriptive name of the server. (ej. `Geoserver IEPNB`)
+    * `geo_datastore`, *str*: Name of the Geoserver datastore ([`datastore`](https://docs.geoserver.org/latest/en/user/data/app-schema/data-stores.html)) from which the elements will be requested.
+    * `geo_url`, *url*: URL del Geoserver (ej. `http://127.0.0.1:8080/geoserver/`).
+    * `geo_workspace`, *str*: Name of the Geoserver workspace ([`workspace`](https://docs.geoserver.org/stable/en/user/data/webadmin/workspaces.html)) to which the elements will be uploaded.
+    * `geo_username`, *str*: Geoserver admin username.
+    * `geo_password`, *str*: Geoserver admin password.
+    * `geo_srid`, *int*: Geoserver default [EPSG code](https://spatialreference.org/ref/epsg/).
+    * `geo_active`, *bool*: Whether the endpoint is active for data upload to the endpoint. Value: `True` or `False`.
 
-* Opcionales:
-    * `groups`: Grupos a los que pertenece el dataset dentro de `{ckan_site_url}/group/ `
-    * `default_keywords`: Las palabras claves por defecto para identificar los datasets cosechados en el servidor (en CKAN, `dct:keyword`). (ej. `['iepnb', 'environment', 'biota']`)
-    * `constraints`: Las palabras que determinarán la restricción al cosechamiento de registros de metadatos en el endpoint CSW, así pues, solo aquellos que las contengan serán cosechados. Pueden ser de dos tipos: palabras clave (`keywords`) o correos electrónicos (`mails`). Ej. 
-        ```yaml
-        constraints:
-            keywords: ['iepnb', 'inventario', 'patrimonio', 'miteco', 'natura'] 
-            mails: ['brfranco@miteco.es', 'buzon-bdatos@miteco.es']
-        ```
-    * `default_bbox`: GeoJSON con el bounding box por defecto para aquellos registros que no lo contengan. (Por defecto se usa el de España: `{"type": "Polygon", "coordinates": [[[-19.0, 27.0], [4.57, 27.0], [4.57, 44.04], [-19.0, 44.04], [-19.0, 27.0]]]}`)
+### `datasets_doc`
+Parameters needed to define the `database table`/`CSV` containing the basic information about the datasets to be loaded into the DB and/or Geoserver.
 
-    >**Note**<br>
-    > Pueden dejarse vacíos o rellenarse con valores a discreción.
+**Mandatory**
 
+`bundle_id`, *str*: Bundle identifier, one per geoserver-postgis info (ej. `test_bundle`).
 
-### `ckan_info`
-Información sobre la configuración interna del software de cosecha.
-
-* Obligatorios:
-    * `ckan_site_url`: URL pública del servicio CKAN. (ej. `https://iepnb.es/catalogodatos`)
-    * `authorization_key`: API Key del usuario que ingiere los conjuntos de datos. Por ejemplo, la clave de autorización del usuario `admin` se muestra en http://{ckan_site_url}:5000/user/admin
-
-* Opcionales:
-    * `default_license`: Valor de la `url` de la Licencia para la propiedad `dct:license` en base a la lista de licencias disponibles: http://{ckan_site_url}:5000/api/3/action/license_list
-    * `license_id`: Valor del `id` de la licencia usada para la visualización del dataset en CKAN, en base a la lista de licencias disponibles: http://{ckan_site_url}:5000/api/3/action/license_list
-  
-    >**Note**<br>
-    > Pueden dejarse vacíos o rellenarse con valores a discreción.
-
-
-### Configuración interna
-* `ckan_harvester`
-  * `name`: Nombre informativo del tipo de cosechador.
-  * `type`: Tipo de servidor. Valor: `ogc` ó `csw`
-  * `active`  Sí se permite la cosecha de este tipo de cosechador en el programa. Valor: `True` ó `False`
-
-  >**Note**<br>
-  > Permite activar o desactivar los tipos de cosechador del programa a discreción.
+* Database:
+    * `db_datasets_doc_mode`, *bool*: Source of the dataset table. `False`: Physical file in a directory (`CSV`), `True`: Database table.
+    * `db_datasets_doc_table`, *str*: `schema`.`table` containing the dataset information. (ej. `public.datasets`)
+    * `datasets_doc_path`, *str*: Filepath of the `CSV` datasets documentation.
+    * `date`, *date*: Date of the documentation.
+    * `output_schema`, *str*: Base schema where the files loaded into the database will be stored.
+    * `field_name`, *str*: Dataset field name of the dataset name.
+    * `field_publisher`, *str*: Dataset field name of the dataset publisher.
+    * `field_identifier`, *str*: Dataset field name of the dataset identifier.
+    * `field_path`, *str*: Dataset field name of the dataset filepath.
+    * `field_srid`, *str*: Dataset field name of the dataset SRID.
+    * `field_carto_type`, *str*: Dataset field name of the dataset carto type. `vector` or `raster`.
+    * `field_sld`, *str*: Dataset field name of the dataset sld filepath.
+    * `field_metadata_url`, *str*: Dataset field name of the dataset metadata url.
+    * `field_description`, *str*: Dataset field name of the dataset description.
+    * `field_ogc_workspace`, *str*: Dataset field name of the dataset Geoserver workspace.
+    * `field_creator`, *str*: Dataset field name of the dataset creator.
+    * `publisher`, *str*: Name of the Datasets publisher.
 
 ### `default`
-* `log_folder`: Ruta del fichero de Log, por defecto toma `../../../log/`
-* `parallelization`: Sí desea ejecutar el cosechador de forma paralela, utilizará todos los núcleos disponibles menos uno. **Puede omitir conjuntos de datos la paralelización si se cosechan dos servidores que puedan contener los mismos registros de metadatos (UUID)** Valor: `True` ó `False`
-
-
-### `db_dsn` [`Sin uso`]
-  * `host`: Nombre o IP del host.
-  * `port`: Puerto del host del que hace uso la BBDD. Por defecto: `5432`
-  * `dbname`: Nombre de la base de datos.
-  * `username`: Nombre del usuario.
-  * `password`: Contraseña del usuario.
-
-  >**Note**<br>
-  > **Actualmente si uso** | Datos de conexión a la base de datos.
+* `parallelization`, *bool*: Execute software with multicore parallel processing. Value: `True` or `False`
+* `proxy_socks5`, *str*: SOCKS5 proxy URL loads only. `socks5://user:pass@host:port`
+* `proxy_http`, *str*: HTTP proxy URL loads only. `http://user:pass@host:port`
+* `load_to_db`, *bool*: Load datasets into the database. Value: `True` or `False`
+* `load_to_geoserver`, *bool*: Load datasets into the Geoserver. Value: `True` or `False`
 
 ## Execution
 Example of CKAN harvester execution:
@@ -183,12 +188,12 @@ Example of CKAN harvester execution:
 # Linux
 . /my/path/geopostgis_manager/.env/bin/activate
 export PYTHONPATH=/my/path/geopostgis_manager/src
-python3 /my/path/geopostgis_manager/src/ckan/ogc_ckan/run.py
+python3 /my/path/geopostgis_manager/src/geopostgis-manager/run.py
 
 # Windows
 .env\Scripts\activate.bat  # CMD || env\Scripts\Activate.ps1  # Powershell
-PYTHONHOME=/my/path/geopostgis_manager
-python /ckan/ogc_ckan/run.py
+PYTHONHOME=/my/path/geopostgis_manager/src
+python /my/path/geopostgis_manager/src/geopostgis-manager/run.py
 ```
 
 ## Debug

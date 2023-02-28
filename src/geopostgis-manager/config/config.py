@@ -1,27 +1,15 @@
 #!/usr/bin/env python3
-## File: config.py
 ## Coding: UTF-8
-## Author: Manuel Ángel Jáñez García (mjanez@tragsa.es)
+## Author: mjanez@tragsa.es
 ## Institution: -
 ## Project: -
-## Goal: The goal of this script is is to provide the connection details to the PostGIS database and Geoserver.
-## Parent: ogc_ckan/ckan_config.py
-""" Changelog:
-    v1.0 - 12 Dec 2022: Create the first version
-"""
-# Update the version when apply changes
-version = "1.0"
-
-##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~##
-##               config.py              ##
-##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~##
-
-# Connection details to the ckan database
-
-## Import libraries   
+# inbuilt libraries
 import yaml
 from functools import reduce
 import os
+from tempfile import mkstemp
+from typing import Dict
+from zipfile import ZipFile
 
 # Applies to Python-3 Standard Library
 class Struct(object):
@@ -40,10 +28,12 @@ def config_get_parameters():
     """
     Read the config_file var and return the required parameters from the YAML 
     
-    Parameters:
-    - config_file -- config.yml
+    Parameters
+    ----------
+    - config_file: config.yml
 
-    Return:
+    Return
+    ----------
     Parameters from config.yml
     """
     # Config default path
@@ -55,10 +45,11 @@ def config_get_parameters():
         Read the YAML 
     
         Parameters
-        - key -- Key
-        - cfg -- Config element
+        - key: Key
+        - cfg: Config element
 
-        Return:
+        Return
+        ----------
         Config element
         """
         return reduce(lambda c, k: c[k], key.split('.'), cfg)
@@ -75,10 +66,42 @@ def config_get_parameters():
 
     with open(config_file, encoding="utf-8") as stream:
         config = yaml.safe_load(stream)
-        geoserver_servers = config_to_object(get_config_valor('geoserver_servers', config))
-        db_servers = config_to_object(get_config_valor('db_servers', config))
+        geopostgis_bundles = config_to_object(get_config_valor('geopostgis_bundles', config))
         datasets_doc = config_to_object(get_config_valor('datasets_doc', config))
         default_config = config_to_object(get_config_valor('default', config))
 
-    return geoserver_servers, db_servers, datasets_doc, default_config
+    return geopostgis_bundles, datasets_doc, default_config
 
+# Prepare ZIPs
+def prepare_zip_file(name: str, data: Dict) -> str:
+    """Creates a zip file from
+
+    GeoServer's REST API uses ZIP archives as containers for file formats such
+    as Shapefile and WorldImage which include several 'boxcar' files alongside
+    the main data.  In such archives, GeoServer assumes that all of the relevant
+    files will have the same base name and appropriate extensions, and live in
+    the root of the ZIP archive.  This method produces a zip file that matches
+    these expectations, based on a basename, and a dict of extensions to paths or
+    file-like objects. The client code is responsible for deleting the zip
+    archive when it's done.
+
+    Parameters
+    ----------
+    name : name of files
+    data : dict
+
+    Returns:
+    str
+    """
+    fd, path = mkstemp()
+    zip_file = ZipFile(path, "w", allowZip64=True)
+    print(fd, path, zip_file, data)
+    for ext, stream in data.items():
+        fname = "{}.{}".format(name, ext)
+        if isinstance(stream, str):
+            zip_file.write(stream, fname)
+        else:
+            zip_file.writestr(fname, stream.read())
+    zip_file.close()
+    os.close(fd)
+    return path

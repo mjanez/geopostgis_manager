@@ -1,64 +1,61 @@
-
-# Geoserver Parameters [Mandatory]
-geoserver_servers:
-  # Geoserver #1
-  - name: SVJC-DES-DGPCE Server Test
-    dbname_store: dev_mnrdb
-    url: http://svjc-des-dgpce:8090/geoserver
-    active: True
-    workspace: test
-    username: admin
-    password: ttVKKT3uL45IJhB2Q6iN
-
-  # Geoserver #2
-  - name: SVJC-DES-DGPCE Server
-    dbname_store: dev_mnrdb
-    url: http://svjc-des-dgpce:8090/geoserver
-    active: False
-    workspace: mnr
-    username: admin
-    password: ttVKKT3uL45IJhB2Q6iN
-    output_schema: public
-
-# DB connection parameters [Mandatory]
-db_servers:
-  # mnrdb
-  - name: MNR PostGIS
-    type: postgres
-    host: svjc-des-dgpce
-    port: '5432'
-    dbname: dev_mnrdb
-    username: mnrz
-    password: wenGYIHdkwB6R9XIX184
+geopostgis_bundles:
+  # Bundle ID [Mandatory]
+  - bundle_id: 'dgpce_mnr'
+    # DB connection parameters [Mandatory]
+    db_endpoint: MNR PostGIS
+    db_type: postgres
+    db_host: '127.0.0.1'
+    db_port: '5433'
+    db_dbname: mnrdb
+    db_username: mnrz
+    db_password: password
+    db_active: True
     
-# Dataset documentation details [Mandatory]
+    # Geoserver Parameters [Mandatory]
+    geo_endpoint: Localhost Server Test
+    geo_datastore: mnrdb
+    geo_url: http://localhost:8091/geoserver
+    # geo_workspace Overrides ogc_workspace in dataset table. If not put: Null
+    geo_workspace: test
+    geo_username: admin
+    geo_password: password
+    geo_srid: 3857
+    geo_active: True
+
+# Dataset documentation details by bundle [Mandatory]
 datasets_doc:
-  in_db: True
-  db_table: 'public.datasets'
-  path: 'D:\Local\Repositorio\Github\local\geopostgis_manager\data\datasets_doc.csv'
-  date: 2002-12-12
-  # Schema in which the tables with the spatial data will be stored. Default: public
-  output_schema: public
-  # Field names [Mandatory]
-  field_name: titulo
-  field_publisher: distribuidor
-  field_identifier: nombre_capa
-  field_path: ruta_p
-  # Field names [Optional]
-  field_sld: sld
-  field_metadata_url: url_metadatos
-  field_description: resumen
-  field_ogc_workspace: workspace_ogc
-  field_creator: propietario
-  # Loader publisher
-  publisher: Tragsatec
+  # Bundle ID [Mandatory]
+  - bundle_id: 'dgpce_mnr'
+    db_datasets_doc_mode: False
+    db_datasets_doc_table: 'public.datasets'
+    datasets_doc_path: '/geopostgis_manager/data/datasets_doc.csv'
+    date: 2002-12-12
+    # Schema in which the tables with the spatial data will be stored. Default: public
+    output_schema: public
+    # Field names [Mandatory]
+    field_name: titulo
+    field_publisher: distribuidor
+    field_identifier: nombre_capa
+    field_path: ruta_p
+    field_srid: srid
+    field_carto_type: format_type
+    # Field names [Optional]
+    field_sld: sld
+    field_metadata_url: url_metadatos
+    field_description: resumen
+    field_ogc_workspace: workspace_ogc
+    field_creator: propietario
+    # Loader publisher
+    publisher: Tragsatec
 
 # Config  [Mandatory]
 default:
-  # Software version
-  version: 1.0
   # Execute software with multicore parallel processing
-  parallelization: True
+  parallelization: False
+  # If needed, proxy socks5/http (http-https)
+  #proxy_socks5: 'socks5://user:pass@host:port'
+  proxy_socks5: 'socks5://user:pass@host:port'
+  proxy_http: 'http://user:pass@host:port'
   # Loading modes
-  load_to_db: True
+  load_to_db: False
   load_to_geoserver: True
