@@ -1,0 +1,10 @@
+*.log
+*.pyc
+/.vscode
+env/
+.env/
+venv/
+/log
+**/__pycache__
+/data/*zip
+/docs/*
