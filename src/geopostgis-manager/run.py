@@ -99,9 +99,9 @@ def generate_datasets_object(bundle, bundle_doc, db_type=None, log_folder=None):
     logging.info(f"{log_module}:Modes: Load datasets into Database='{default_config.load_to_db}' and Geoserver='{default_config.load_to_geoserver}'")
 
     if obj_datasets.geoserver_params.workspace is not None:
-        logging.warning(f"{log_module}:The 'geo_workspace' parameter (value: '{obj_datasets.geoserver_params.workspace}') of 'config.yml' is being used as 'workspace' in Geoserver.")
+        logging.warning(f"{log_module}:The 'geo_workspace' parameter with value: '{obj_datasets.geoserver_params.workspace}' of 'config.yml' is being used as 'workspace' in Geoserver.")
 
-    logging.info(f"{log_module}:Datasets origin: {datasets_mode.upper()}  from: {datasets_table}")
+    logging.info(f"{log_module}:Datasets origin: '{datasets_mode.upper()}'  from: {datasets_table}")
 
     return obj_datasets
 
@@ -160,7 +160,7 @@ def ingest_geoserver(obj_datasets):
     else:
         logging.error(f"{log_module}:Data origin: {obj_datasets.db_type} not supported.")
 
-        return None
+    return None
 
 if __name__ == '__main__':
     # About (__version__.py)
@@ -188,18 +188,25 @@ if __name__ == '__main__':
 
         # Ingest to DB
         if bundle.db_active == True:
-            obj_datasets = ingest_db(obj_datasets)
+            if default_config.load_to_db == True:
+                obj_datasets = ingest_db(obj_datasets)
+
+            else:
+                logging.warning(f"{log_module}:Try to upload into Database but in 'config.yml' the key default.load_to_db: '{default_config.load_to_db}'")
 
         # Ingest to Geoserver 
         if bundle.geo_active == True:
-            obj_datasets = ingest_geoserver(obj_datasets)
+            if default_config.load_to_geoserver == True:
+                obj_datasets = ingest_geoserver(obj_datasets)
+
+            else:
+                logging.warning(f"{log_module}:Try to upload into Geoserver but in 'config.yml' the key default.load_to_geoserver: '{default_config.load_to_geoserver}'")
 
         # geopostgis-manager output_info
         obj_datasets.output_info.set_csv(log_folder, obj_datasets.datasets)
         obj_datasets.output_info.set_output_info(obj_datasets.datasets)
         elapsedtime = str(datetime.now() - harvester_start).split(".")[0]
-        logging.info("")
         logging.info(
             f"{log_module}:geopostgis-bundle: '{bundle.bundle_id}'\nResume: new DB datasets: {obj_datasets.output_info.db_records} - new Geoserver datasets: {obj_datasets.output_info.geo_records} - errors: {obj_datasets.output_info.error_records} - Total datasets in doc: {obj_datasets.output_info.total_records} | Total time elapsed: {elapsedtime}"
         )
-        logging.info(f"{log_module}:Datasets log-info file:'{obj_datasets.output_info.csv_file}'")
+        logging.info(f"{log_module}:Datasets logfile:'{obj_datasets.output_info.zip_file}'")
