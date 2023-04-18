@@ -14,16 +14,17 @@ from pathlib import Path
 import os
 import csv
 from typing import List, Optional
+import zipfile
 
 # custom functions
 from config.log import  log_file
-from model.Db import get_connection, create_engine
+from model.db import get_connection, create_engine
 from controller.postgismanager import shp_to_postgis, update_srid, create_index, get_srid, check_table_exists
 from controller.geoservermanager import check_geoserver_datastore, check_geoserver_workspace, create_geoserver_layer
 
 # custom classes
-from model.Dataset import Dataset
-from model.Geoserver import Geoserver
+from model.dataset import Dataset
+from model.geoserver import Geoserver
 
 # third-party libraries
 import shutil
@@ -145,6 +146,7 @@ class OutputInfo:
         """
         self.csv_id: str = f"geopostgis-bundle-{bundle_id}"
         self.csv_file = None
+        self.zip_file = None
         self.total_records: int = 0
         self.db_records: int = 0
         self.geo_records: int = 0
@@ -154,16 +156,19 @@ class OutputInfo:
         # datasets to csv
         csv_name = self.csv_id.replace(" ", "-")
         datetime_str = str(datetime.now()).split(":")[0].replace(" ", "_") + "h"
-        self.csv_file = os.path.abspath(f"{log_folder}/{csv_name}_{datetime_str}.csv")
+        csv_file_path = os.path.abspath(os.path.join(log_folder, f"{csv_name}_{datetime_str}"))
+        self.csv_file = f"{csv_file_path}.csv"
+        self.zip_file = f"{csv_file_path}.zip"
         try:
             fieldnames = list(datasets[0].dataset_dict().keys())
             with open(self.csv_file, 'w+', newline='', encoding="utf-8") as data:
-                wr = csv.writer(data, delimiter=",", quoting=csv.QUOTE_ALL)
-                wr.writerow(fieldnames)
-                for d in datasets:
-                    wr.writerow(list(d.dataset_dict().values()))
-        except:
-            logging.error(f"{log_module}:The CSV: '{str(self.csv_file)}' with datasets log-info could not be created.")
+                writer = csv.DictWriter(data, fieldnames=fieldnames, delimiter=",", quoting=csv.QUOTE_ALL)
+                writer.writeheader()
+                writer.writerows(d.dataset_dict() for d in datasets)
+            with zipfile.ZipFile(self.zip_file, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as zf:
+                zf.write(self.csv_file, arcname=os.path.basename(self.csv_file))
+        except (FileNotFoundError, PermissionError, csv.Error) as e:
+            logging.error(f"{log_module}:The CSV: '{str(self.csv_file)}' with datasets log-info could not be created: {e}")
 
     def set_output_info(self, datasets):
         self.total_records = len(datasets)

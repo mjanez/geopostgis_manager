@@ -12,7 +12,7 @@ import unicodedata
 
 
 log_module = f"[{__name__}]"
-log_model_geo = f"[model.Geoserver]"
+log_model_geo = f"[model.geoserver]"
 
 
 def check_geoserver_workspace(geo, workspace: str, datastore: str):

@@ -8,7 +8,7 @@ import logging
 from typing import Optional
 
 # custom functions
-from model.Db import get_query, get_connection
+from model.db import get_query, get_connection
 
 # third-party libraries
 import geopandas as gpd
