@@ -1,6 +1,6 @@
 <h1 align="center">geopostgis-manager</h1>
 <p align="center">
-<a href="https://github.com/mjanez/geopostgis_manager-ckan"><img src="https://camo.githubusercontent.com/e7482049f34711b5200ecc70004690f13f2a0fae49a9f48e96dc2cf7dbac483b/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f446f636b6572253230434b414e2d322e392e352d627269676874677265656e" alt="CKAN Versions"></a><a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+<a href="https://github.com/mjanez/geopostgis_manager-ckan"><img src="https://img.shields.io/badge/geopostgis--manager-1.0.0-brightgreen" alt="geopostgis-manager version"></a><a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
 
 
 <p align="center">
